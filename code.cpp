@@ -51,6 +51,8 @@ double dist(Point x, Point y) {
 
 Mat pre_processing(Mat frame) {
 
+  GaussianBlur(frame, frame, Size(7, 7), 1.5, 1.5);
+
   Mat hsv;
   cvtColor(frame, hsv, CV_BGR2HSV);
 
@@ -60,14 +62,8 @@ Mat pre_processing(Mat frame) {
 
   inRange(hsv, Scalar(0, 10, 60), Scalar(20, 150, 255), ranged);
 
-  /*
-
-   cvtColor(frame, frame, COLOR_BGR2HSV);
-   GaussianBlur(frame, frame, Size(7, 7), 1.5, 1.5);
-
    Mat element = (Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
    morphologyEx(frame, frame, MORPH_OPEN, element);
-   */
 
   return ranged;
 }
@@ -110,19 +106,20 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3) {
 }
 
 Mat contouring(Mat ranged, Mat frame) {
-  frame = skin_detection(ranged, frame);
+//  frame = skin_detection(ranged, frame);
 
-  /*
+
 
    vector<vector<Point>> contours;
-   vector<Vec4i> hierarchy;
+//   vector<Vec4i> hierarchy;
 
    //Find the contours in the foreground
 
 
-   findContours(frame, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-   */
-  /* for (int i = 0; i < contours.size(); i++)
+   findContours(ranged, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+   imshow("FindContour", ranged);
+
+   for (int i = 0; i < contours.size(); i++)
    //Ignore all small insignificant areas
    if (contourArea(contours[i]) >= 5000) {
    //Draw contour
@@ -139,8 +136,8 @@ Mat contouring(Mat ranged, Mat frame) {
 
    //Find minimum area rectangle to enclose hand
    RotatedRect rect = minAreaRect(Mat(tcontours[0]));
-
-
+   }
+/*
    //Find Convex Defects
    vector<Vec4i> defects;
    if (hullsI[0].size() > 0) {
