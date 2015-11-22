@@ -89,27 +89,30 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3) {
   return make_pair(Point(centerx, centery), radius);
 }
 
-void contouring(Mat bg, Mat pre_processed) {
+Mat contouring(Mat bg, Mat pre_processed) {
   vector<vector<Point>> contours;
 
   //Find the contours in the foreground
+  Mat thr = bg.clone();
+  thr = threshold(bg, bg, 130, 255, THRESH_BINARY);
+  imshow("Binary", binarize(bg));
   findContours(binarize(bg), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
 
-/*  for (int i = 0; i < contours.size(); i++)
+  for (int i = 0; i < contours.size(); i++)
     //Ignore all small insignificant areas
     if (contourArea(contours[i]) >= 5000) {
       //Draw contour
       vector<vector<Point>> tcontours;
       tcontours.push_back(contours[i]);
-      drawContours(frame, tcontours, -1, Scalar(0, 0, 255), 2);
+      drawContours(pre_processed, tcontours, -1, Scalar(0, 0, 255), 2);
 
       //Detect Hull in current contour
       vector<vector<Point> > hulls(1);
       vector<vector<int> > hullsI(1);
       convexHull(Mat(tcontours[0]), hulls[0], false);
       convexHull(Mat(tcontours[0]), hullsI[0], false);
-      drawContours(frame, hulls, -1, Scalar(0, 255, 0), 2);
+      drawContours(pre_processed, hulls, -1, Scalar(0, 255, 0), 2);
 
       //Find minimum area rectangle to enclose hand
       RotatedRect rect = minAreaRect(Mat(tcontours[0]));
@@ -120,7 +123,7 @@ void contouring(Mat bg, Mat pre_processed) {
         Point2f rect_points[4];
         rect.points(rect_points);
         for (int j = 0; j < 4; j++)
-          line(frame, rect_points[j], rect_points[(j + 1) % 4],
+          line(pre_processed, rect_points[j], rect_points[(j + 1) % 4],
               Scalar(255, 0, 0), 1, 8);
         Point rough_palm_center;
         convexityDefects(tcontours[0], hullsI[0], defects);
@@ -214,18 +217,18 @@ void contouring(Mat bg, Mat pre_processed) {
 
            no_of_fingers = min(5, no_of_fingers);
            cout << "NO OF FINGERS: " << no_of_fingers << endl;
-           mouseTo(palm_center.x, palm_center.y); //Move the cursor corresponding to the palm
-           if (no_of_fingers < 4) //If no of fingers is <4 , click , else release
-           mouseClick();
-           else
-           mouseRelease();
+//           mouseTo(palm_center.x, palm_center.y); //Move the cursor corresponding to the palm
+//           if (no_of_fingers < 4) //If no of fingers is <4 , click , else release
+//           mouseClick();
+//           else
+//           mouseRelease();
 
            }
       }
 
-    }*/
+    }
 
-//  return frame;
+  return pre_processed;
 }
 
 int process_video() {
@@ -244,7 +247,7 @@ int process_video() {
 
     Mat bg_sub = bg_subtraction(cap, pre_processed);
 
-    contouring(bg_sub,frame);
+    pre_processed = contouring(bg_sub,frame);
 
     imshow("Frame", pre_processed);
     imshow("FG Mask MOG 2",bg_sub);
