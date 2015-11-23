@@ -219,7 +219,14 @@ Mat contouring(Mat binarized, Mat pre_processed) {
               }
           }
            no_of_fingers = min(5, no_of_fingers);
-           cout << "NO OF FINGERS: " << no_of_fingers << endl;
+//           cout << "NO OF FINGERS: " << no_of_fingers << endl;
+
+           if(no_of_fingers == 1){
+             cout << "NO OF FINGERS: " << no_of_fingers << endl;
+             // Draw a line
+             line( frame, Point( 15, 20 ), Point( 70, 50), Scalar( 110, 220, 0 ),  2, 8 );
+//             imshow("Line",frame);
+           }
            }
       }
 
@@ -250,8 +257,8 @@ int process_video() {
     Mat contour = contouring(fg_binarized,frame);
 
     imshow("Frame", contour);
-    imshow("FG Mask MOG 2",bg_sub);
-    imshow("Background",back);
+//    imshow("FG Mask MOG 2",bg_sub);
+//    imshow("Background",back);
     if (waitKey(30) >= 0)
       break;
   }
