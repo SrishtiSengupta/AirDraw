@@ -18,7 +18,6 @@
 
 #include <core/cvdef.h>
 #include <core/cvstd.hpp>
-#include <core/cvstd.inl.hpp>
 #include <core/mat.hpp>
 #include <core/mat.inl.hpp>
 #include <core/matx.hpp>
@@ -89,7 +88,7 @@ void on_mouse( int e, int x, int y, int d, void *ptr )
 
 Mat pre_processing(Mat frame) {
 
-  GaussianBlur(frame, frame, Size(7, 7), 10, 10);
+//  GaussianBlur(frame, frame, Size(7, 7), 10, 10);
   Mat gray_scale;
   cvtColor(frame, gray_scale, COLOR_BGR2GRAY, 1);
 
@@ -259,7 +258,10 @@ Mat contouring(Mat binarized, Mat pre_processed) {
            no_of_fingers = min(5, no_of_fingers);
            cout << "NO OF FINGERS: " << no_of_fingers << endl;
 
-           setMouseCallback("Frame", on_mouse, &palm_center);
+           putText(pre_processed, "NO OF FINGERS: " + to_string(no_of_fingers), Point(30,30),
+               FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(200,200,250), 1, CV_AA);
+
+//           setMouseCallback("Frame", on_mouse, &palm_center);
 
 /*           if(no_of_fingers == 1){
              cout << "NO OF FINGERS: " << no_of_fingers << endl;
