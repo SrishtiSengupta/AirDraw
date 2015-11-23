@@ -51,6 +51,42 @@ double dist(Point x, Point y) {
   return (x.x - y.x) * (x.x - y.x) + (x.y - y.y) * (x.y - y.y);
 }
 
+/*
+void CallBackFunc(int event, int x, int y, int d, void *ptr)
+{
+     if  ( event == EVENT_LBUTTONDOWN )
+     {
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if  ( event == EVENT_RBUTTONDOWN )
+     {
+          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if  ( event == EVENT_MBUTTONDOWN )
+     {
+          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if ( event == EVENT_MOUSEMOVE )
+     {
+          cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+
+     }
+
+
+     Point*p = (Point*)ptr;
+     p->x = x;
+     p->y = y;
+}
+*/
+
+void on_mouse( int e, int x, int y, int d, void *ptr )
+{
+    Point*p = (Point*)ptr;
+    p->x = x;
+    p->y = y;
+}
+
+
 Mat pre_processing(Mat frame) {
 
   GaussianBlur(frame, frame, Size(7, 7), 10, 10);
@@ -178,6 +214,8 @@ Mat contouring(Mat binarized, Mat pre_processed) {
 
           Point palm_center;
           double radius = 0;
+
+          //averaging all palm centres
           for (int i = 0; i < palm_centers.size(); i++) {
             palm_center += palm_centers[i].first;
             radius += palm_centers[i].second;
@@ -219,14 +257,17 @@ Mat contouring(Mat binarized, Mat pre_processed) {
               }
           }
            no_of_fingers = min(5, no_of_fingers);
-//           cout << "NO OF FINGERS: " << no_of_fingers << endl;
+           cout << "NO OF FINGERS: " << no_of_fingers << endl;
 
-           if(no_of_fingers == 1){
+           setMouseCallback("Frame", on_mouse, &palm_center);
+
+/*           if(no_of_fingers == 1){
              cout << "NO OF FINGERS: " << no_of_fingers << endl;
              // Draw a line
-             line( frame, Point( 15, 20 ), Point( 70, 50), Scalar( 110, 220, 0 ),  2, 8 );
+             line( frame, palm_center,palm_centers[10].first, Scalar( 110, 220, 0 ),  2, 8 );
+
 //             imshow("Line",frame);
-           }
+           }*/
            }
       }
 
@@ -271,6 +312,8 @@ int main(int, char**) {
   //create Background Subtractor objects
   pMOG2 = createBackgroundSubtractorMOG2(); //MOG2 approach
   int res = process_video();
+  //Create a window
+  namedWindow("Frame", 1);
   return 0;
 }
 
