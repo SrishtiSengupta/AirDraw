@@ -7,13 +7,6 @@
  *      Author: (Bu)nn
 
 
-
-
- TODO
-
- * Background Subtration to get just the hand (binarized image)
- *
-
  */
 
 #include <core/cvdef.h>
@@ -45,48 +38,11 @@ Mat back;
 Ptr<BackgroundSubtractorMOG2> pMOG2; //MOG2 Background subtractor
 vector<pair<Point, double>> palm_centers;
 Mat draw;
+
 //This function returns the square of the euclidean distance between 2 points.
 double dist(Point x, Point y) {
   return (x.x - y.x) * (x.x - y.x) + (x.y - y.y) * (x.y - y.y);
 }
-
-/*
-void CallBackFunc(int event, int x, int y, int d, void *ptr)
-{
-     if  ( event == EVENT_LBUTTONDOWN )
-     {
-          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-     }
-     else if  ( event == EVENT_RBUTTONDOWN )
-     {
-          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-     }
-     else if  ( event == EVENT_MBUTTONDOWN )
-     {
-          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-     }
-     else if ( event == EVENT_MOUSEMOVE )
-     {
-          cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
-
-     }
-
-
-     Point*p = (Point*)ptr;
-     p->x = x;
-     p->y = y;
-}
-*/
-
-/*
-void on_mouse( int e, int x, int y, int d, void *ptr )
-{
-    Point*p = (Point*)ptr;
-    p->x = x;
-    p->y = y;
-}
-*/
-
 
 Mat pre_processing(Mat frame) {
 
@@ -99,7 +55,6 @@ Mat pre_processing(Mat frame) {
 
   return gray_scale;
 }
-
 
 
 Mat bg_subtraction(VideoCapture cap, Mat frame) {
@@ -136,6 +91,7 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3) {
 
 Mat contouring(Mat binarized, Mat pre_processed) {
   vector<vector<Point>> contours;
+
 
   //Find the contours in the binarized foreground
 
@@ -241,13 +197,27 @@ Mat contouring(Mat binarized, Mat pre_processed) {
             Point ptEnd(tcontours[0][endidx]);
             int faridx = defects[j][2];
             Point ptFar(tcontours[0][faridx]);
+
             //X o--------------------------o Y
+
             double Xdist = sqrt(dist(palm_center, ptFar));
             double Ydist = sqrt(dist(palm_center, ptStart));
             double length = sqrt(dist(ptFar, ptStart));
 
             double retLength = sqrt(dist(ptEnd, ptFar));
             //Play with these thresholds to improve performance
+
+
+/*
+
+            createTrackbar("length", "Frame",&global_var1, 250, changing_var1);
+            createTrackbar("Var2", "Frame",&global_var2, 250, changing_var2);
+
+*/
+
+
+
+
             if (length <= 3 * radius && Ydist >= 0.4 * radius && length >= 10
                 && retLength >= 10
                 && max(length, retLength) / min(length, retLength) >= 0.8)
@@ -262,20 +232,14 @@ Mat contouring(Mat binarized, Mat pre_processed) {
            no_of_fingers = min(5, no_of_fingers);
            cout << "NO OF FINGERS: " << no_of_fingers << endl;
 
-     /*      putText(pre_processed, "NO OF FINGERS: " + to_string(no_of_fingers), Point(30,30),
+           putText(pre_processed, "NO OF FINGERS: " + to_string(no_of_fingers), Point(30,30),
                FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(200,200,250), 1, CV_AA);
-*/
-
-
-//           addWeighted(pre_processed,1,draw,0,0,pre_processed);
 
            if(no_of_fingers == 1){
              cout << "NO OF FINGERS: " << no_of_fingers << endl;
-             //draw on draw
-                        circle(draw, palm_center, 10, Scalar(144, 144, 255), 2);
-                        imshow("draw",draw);
-
-//             imshow("Line",frame);
+             //draw on draw matrix
+             circle(draw, palm_center, 2, Scalar(144, 144, 255), 2);
+             imshow("draw", draw);
            }
            }
       }
@@ -284,6 +248,7 @@ Mat contouring(Mat binarized, Mat pre_processed) {
 
   return pre_processed;
 }
+
 
 int process_video() {
 
@@ -313,10 +278,12 @@ int process_video() {
     Mat element = (Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
     morphologyEx(frame, frame, MORPH_OPEN, element);
 
-
     Mat contour = contouring(fg_binarized,frame);
 
+
+
     imshow("Frame", contour);
+
 //    imshow("FG Mask MOG 2",bg_sub);
 //    imshow("Background",back);
     if (waitKey(30) >= 0)
