@@ -245,12 +245,12 @@ Mat contouring(Mat binarized, Mat pre_processed) {
           }
            no_of_fingers = min(5, no_of_fingers);
            cout << "NO OF FINGERS: " << no_of_fingers << endl;
-/*
+
 
            putText(pre_processed, "NO OF FINGERS: " + to_string(no_of_fingers), Point(30,30),
                FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(200,200,250), 1, CV_AA);
 
-*/
+
            if(no_of_fingers == 1){
              cout << "NO OF FINGERS: " << no_of_fingers << endl;
              //draw on draw matrix
