@@ -20,10 +20,12 @@
 #include <highgui.hpp>
 #include <imgproc/types_c.h>
 #include <imgproc.hpp>
+#include <objdetect.hpp>
 #include <video/background_segm.hpp>
 #include <videoio.hpp>
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -39,6 +41,17 @@ Ptr<BackgroundSubtractorMOG2> pMOG2; //MOG2 Background subtractor
 vector<pair<Point, double>> palm_centers;
 Mat draw;
 
+
+/*
+
+* Global variables
+//String face_cascade_name = "../../../data/haarcascades/haarcascade_frontalface_alt.xml";
+String face_cascade_name = "../../../data/haarcascades/aGest.xml";
+
+
+CascadeClassifier face_cascade;
+*/
+
 //This function returns the square of the euclidean distance between 2 points.
 double dist(Point x, Point y) {
   return (x.x - y.x) * (x.x - y.x) + (x.y - y.y) * (x.y - y.y);
@@ -46,7 +59,7 @@ double dist(Point x, Point y) {
 
 Mat pre_processing(Mat frame) {
 
-//  GaussianBlur(frame, frame, Size(7, 7), 10, 10);
+  GaussianBlur(frame, frame, Size(7, 7), 10, 10);
   Mat gray_scale;
   cvtColor(frame, gray_scale, COLOR_BGR2GRAY, 1);
 
@@ -91,12 +104,13 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3) {
 
 Mat contouring(Mat binarized, Mat pre_processed) {
   vector<vector<Point>> contours;
-
+//  vector<Vec4i> hierarchy;
 
   //Find the contours in the binarized foreground
 
-  findContours(binarized, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-//  imshow("Binary", binarized);
+//  findContours(binarized, contours,hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
+
+  findContours(binarized, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_TC89_KCOS);
 
 
   for (int i = 0; i < contours.size(); i++)
@@ -231,10 +245,12 @@ Mat contouring(Mat binarized, Mat pre_processed) {
           }
            no_of_fingers = min(5, no_of_fingers);
            cout << "NO OF FINGERS: " << no_of_fingers << endl;
+/*
 
            putText(pre_processed, "NO OF FINGERS: " + to_string(no_of_fingers), Point(30,30),
                FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(200,200,250), 1, CV_AA);
 
+*/
            if(no_of_fingers == 1){
              cout << "NO OF FINGERS: " << no_of_fingers << endl;
              //draw on draw matrix
@@ -249,48 +265,116 @@ Mat contouring(Mat binarized, Mat pre_processed) {
   return pre_processed;
 }
 
+/*
+
+void facedetect( Mat frame )
+{
+    vector<Rect> faces;
+    Mat frame_gray;
+
+    if(frame.channels() > 1 )
+      cvtColor( frame, frame_gray, COLOR_BGR2GRAY);
+    else
+      frame_gray = frame;
+
+    equalizeHist( frame_gray, frame_gray );
+
+    //-- Detect faces
+    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+
+    for ( size_t i = 0; i < faces.size(); i++ )
+    {
+        Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
+        ellipse( frame, center, Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, Scalar( 0, 0, 0 ), 200, 8, 0 );
+
+        Mat faceROI = frame_gray( faces[i] );
+     }
+
+}
+*/
+
+
+Mat skin_detect(Mat frame){
+  //blur the image to make segmentation simpler
+//  blur(frame, frame, Size(10, 10));
+
+  //convert the image from bgr to hsv mode
+  Mat hsv;
+  cvtColor(frame, hsv, CV_BGR2HSV);
+
+  Mat ranged;
+  //lower bound - Scalar(0, 10, 60)  and upper bound - Scalar(20, 150, 255) for classifying skin
+  //ranged is set to 255 (skin) if hsv is within the specified range and 0 otherwise.
+  inRange(hsv, Scalar(0, 10, 60), Scalar(20, 150, 255), ranged);
+
+  return ranged;
+//  imshow("ranged", ranged);
+}
 
 int process_video() {
 
   VideoCapture cap(0); // open the default camera
   if (!cap.isOpened())  // check if we succeeded
     return -1;
+/*
 
+  //-- 1. Load the cascades
+   if( !face_cascade.load( face_cascade_name ) ){ printf("--(!)Error loading face cascade\n"); return -1; };
+
+*/
+
+
+  //draw on blackboard
   Size s = Size(640,480);
   draw = Mat::zeros(s,CV_8UC3);
 
-//  draw = Scalar(255,255,255,0);
-
   for (;;) {
+
+/*
+ * Play with parameters
+ * BG Subt -> threshold [OTSU] -> morph -> contour = shows circles in contours
+ * Face detect -> remove with flood fill -> skin -> contour
+ * Hand Detection with haar -> bounding box -> contouring within box = shows circles in contours
+*/
 
     //Capture the Frame and convert it to Grayscale
     cap >> frame; // get a new frame from camera
 
+    Mat orig = frame.clone();
+
     Mat foreground;
     Mat pre_processed = pre_processing(frame);
     Mat bg_sub = bg_subtraction(cap, pre_processed);
+
+/*
+        facedetect(pre_processed);
+        facedetect(back);
+*/
+
     absdiff(pre_processed, back, foreground);
+
+/*
+    // detect and remove face
+    //skin extraction and binarize on that basis
+    Mat hand_binarized = skin_detect(frame);
+*/
 
     Mat fg_binarized;
     threshold(foreground, fg_binarized, 0, 255, THRESH_BINARY | THRESH_OTSU);
 
+    GaussianBlur(fg_binarized, fg_binarized, Size(7, 7), 10, 10);
 
+    //morphology to remove noise
     Mat element = (Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
-    morphologyEx(frame, frame, MORPH_OPEN, element);
+    morphologyEx(fg_binarized, fg_binarized, MORPH_OPEN, element);
 
-    Mat contour = contouring(fg_binarized,frame);
-
-
+    //finally contour
+    Mat contour = contouring(fg_binarized,orig);
 
     imshow("Frame", contour);
-
-//    imshow("FG Mask MOG 2",bg_sub);
-//    imshow("Background",back);
     if (waitKey(30) >= 0)
       break;
   }
-
-
   return 0;
 }
 
@@ -300,4 +384,3 @@ int main(int, char**) {
   int res = process_video();
   return 0;
 }
-
