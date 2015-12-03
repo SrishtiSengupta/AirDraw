@@ -324,9 +324,6 @@ int process_video() {
 
     Mat bg_removed;
     orig.copyTo(bg_removed,fg_binarized_mask);
-
-
-    facedetect(bg_removed);
     imshow("BG Removed", bg_removed);
 
     //Convert bg_removed to channel 1 using pre_processing()
@@ -335,7 +332,7 @@ int process_video() {
     //finally contour
 
 
-
+//    facedetect(bg_removed);
 
 
 
