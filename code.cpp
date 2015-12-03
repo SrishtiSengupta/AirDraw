@@ -41,6 +41,8 @@ Mat back;                                       //stores the background frame
 Ptr<BackgroundSubtractorMOG2> pMOG2;            //MOG2 Background subtractor
 vector<pair<Point, double>> palm_centers;       //store last 10 palm centers
 Mat draw;                                       //Mat for drawing
+vector<Point> points;
+
 
 //String face_cascade_name =
 //    "../../../data/haarcascades/haarcascade_frontalface_alt.xml";
@@ -241,10 +243,17 @@ Mat contouring(Mat binarized, Mat pre_processed) {
 
           if (no_of_fingers == 1) {
             //draw on draw matrix
-            circle(draw, palm_center, 2, Scalar(144, 144, 255), 2);
+
+            circle(draw, palm_center, 2, Scalar(0, 0, 255), 2);
+
+            if(!points.empty())
+              line(draw, palm_center, points.back() ,Scalar(14, 174, 255), 2);
+
+            points.push_back(palm_center);
+
 //            imshow("draw", draw);
           }else if(no_of_fingers == 5){
-            putText(pre_processed, "PAN",
+            putText(pre_processed, "PAN GESTURE",
                 Point(90, 90), FONT_HERSHEY_COMPLEX_SMALL, 0.8,
                 Scalar(200, 200, 250), 1, LINE_AA);
 
@@ -352,6 +361,7 @@ int process_video() {
     Mat contour = contouring(fg_binarized_mask, bg_removed);
 
     imshow("Output", contour);
+    imshow("Board", draw);
     if (waitKey(30) >= 0)
       break;
   }
