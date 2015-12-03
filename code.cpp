@@ -327,12 +327,19 @@ int process_video() {
     imshow("BG Removed", bg_removed);
 
     //Convert bg_removed to channel 1 using pre_processing()
+
+    Mat bg_removed_gray = pre_processing(bg_removed);
+    cout << bg_removed_gray.channels() << endl;
+
+    //conversion to channel 1 WITHOUT using preprocessing()
+//    Mat bg_removed_for_face_detection = bg_removed.clone();
+//    cvtColor(bg_removed, bg_removed_for_face_detection, CV_BGR2GRAY);
+
     //Detect Face here and remove it, input would be result of the above step
+//    facedetect(bg_removed_gray);
+
     //only hand is left
     //finally contour
-
-
-//    facedetect(bg_removed);
 
 
 
