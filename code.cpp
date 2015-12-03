@@ -44,6 +44,10 @@ Mat draw;                                       //Mat for drawing
 
 String face_cascade_name =
     "../../../data/haarcascades/haarcascade_frontalface_alt.xml";
+
+//String face_cascade_name =
+//    "haarcascade_frontalface_alt.xml";
+
 //String face_cascade_name = "../../../data/haarcascades/aGest.xml";
 CascadeClassifier face_cascade;
 
@@ -256,6 +260,11 @@ void facedetect(Mat frame) {
 
   equalizeHist(frame_gray, frame_gray);
 
+  //check if face_cascade is empty
+  if (face_cascade.empty()){
+    cout << "empty" <<endl;
+  }
+
   //Detect faces
   face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
       0 | CASCADE_SCALE_IMAGE, Size(30, 30));
@@ -327,21 +336,14 @@ int process_video() {
     imshow("BG Removed", bg_removed);
 
     //Convert bg_removed to channel 1 using pre_processing()
-
     Mat bg_removed_gray = pre_processing(bg_removed);
-    cout << bg_removed_gray.channels() << endl;
-
-    //conversion to channel 1 WITHOUT using preprocessing()
-//    Mat bg_removed_for_face_detection = bg_removed.clone();
-//    cvtColor(bg_removed, bg_removed_for_face_detection, CV_BGR2GRAY);
 
     //Detect Face here and remove it, input would be result of the above step
-//    facedetect(bg_removed_gray);
+    facedetect(bg_removed_gray);
+    imshow("bg removed gray", bg_removed_gray);
 
     //only hand is left
     //finally contour
-
-
 
     Mat contour = contouring(fg_binarized_mask, bg_removed);
 
@@ -356,10 +358,8 @@ int main(int, char**) {
 
   //create Background Subtractor objects
   pMOG2 = createBackgroundSubtractorMOG2(); //MOG2 approach
-  /*
-   //-- 1. Load the cascades
+   // Load the cascades
    if( !face_cascade.load( face_cascade_name ) ){ printf("--(!)Error loading face cascade\n"); return -1; };
-   */
 
   int res = process_video();
   return 0;
