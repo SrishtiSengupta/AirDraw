@@ -42,11 +42,11 @@ Ptr<BackgroundSubtractorMOG2> pMOG2;            //MOG2 Background subtractor
 vector<pair<Point, double>> palm_centers;       //store last 10 palm centers
 Mat draw;                                       //Mat for drawing
 
-String face_cascade_name =
-    "../../../data/haarcascades/haarcascade_frontalface_alt.xml";
-
 //String face_cascade_name =
-//    "haarcascade_frontalface_alt.xml";
+//    "../../../data/haarcascades/haarcascade_frontalface_alt.xml";
+
+String face_cascade_name =
+    "haarcascade_frontalface_alt.xml";
 
 //String face_cascade_name = "../../../data/haarcascades/aGest.xml";
 CascadeClassifier face_cascade;
@@ -238,10 +238,16 @@ Mat contouring(Mat binarized, Mat pre_processed) {
               Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8,
               Scalar(200, 200, 250), 1, LINE_AA);
 
+
           if (no_of_fingers == 1) {
             //draw on draw matrix
             circle(draw, palm_center, 2, Scalar(144, 144, 255), 2);
-            imshow("draw", draw);
+//            imshow("draw", draw);
+          }else if(no_of_fingers == 5){
+            putText(pre_processed, "PAN",
+                Point(90, 90), FONT_HERSHEY_COMPLEX_SMALL, 0.8,
+                Scalar(200, 200, 250), 1, LINE_AA);
+
           }
         }
       }
@@ -259,11 +265,6 @@ void facedetect(Mat frame) {
     frame_gray = frame;
 
   equalizeHist(frame_gray, frame_gray);
-
-  //check if face_cascade is empty
-  if (face_cascade.empty()){
-    cout << "empty" <<endl;
-  }
 
   //Detect faces
   face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2,
@@ -312,6 +313,7 @@ int process_video() {
     Mat orig = frame.clone();
 
     Mat foreground;
+
     Mat pre_processed = pre_processing(frame); //preprocess and convert to grayscale
 
     //returns the bg subtracted and stores
@@ -319,32 +321,34 @@ int process_video() {
 
     absdiff(pre_processed, back, foreground);
 
-    Mat fg_binarized_mask;
-    threshold(foreground, fg_binarized_mask, 0, 255,
-        THRESH_BINARY | THRESH_OTSU);
 
+    Mat temp = foreground.clone();
+//    facedetect(temp);
+
+    Mat fg_binarized_mask;
+    threshold(temp, fg_binarized_mask, 0, 255,
+        THRESH_BINARY | THRESH_OTSU);
     GaussianBlur(fg_binarized_mask, fg_binarized_mask, Size(7, 7), 10, 10);
 
     //morphology to remove noise
     Mat element = (Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
     morphologyEx(fg_binarized_mask, fg_binarized_mask, MORPH_OPEN, element);
 
-    imshow("Binarized Mask", fg_binarized_mask);
-
     Mat bg_removed;
     orig.copyTo(bg_removed,fg_binarized_mask);
-    imshow("BG Removed", bg_removed);
 
-    //Convert bg_removed to channel 1 using pre_processing()
-    Mat bg_removed_gray = pre_processing(bg_removed);
+//    imshow("Binarised", fg_binarized_mask);
 
     //Detect Face here and remove it, input would be result of the above step
-    facedetect(bg_removed_gray);
-    imshow("bg removed gray", bg_removed_gray);
 
-    //only hand is left
+
+    /*
+       //only hand is left detect skin
+      Mat a = skin_detect(bg_removed);
+      imshow("bg removed gray", a);
+     */
+
     //finally contour
-
     Mat contour = contouring(fg_binarized_mask, bg_removed);
 
     imshow("Output", contour);
