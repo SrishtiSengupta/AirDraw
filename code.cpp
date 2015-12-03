@@ -300,7 +300,6 @@ int process_video() {
 
   for (;;) {
     cap >> frame; // get a new frame from camera
-
     Mat orig = frame.clone();
 
     Mat foreground;
@@ -323,8 +322,13 @@ int process_video() {
 
     imshow("mask", fg_binarized_mask);
 
+
+    Mat bg_removed;
+    orig.copyTo(bg_removed,fg_binarized_mask);
+    imshow("BG Removed", bg_removed);
+
     //finally contour
-    Mat contour = contouring(fg_binarized_mask, orig);
+    Mat contour = contouring(fg_binarized_mask, bg_removed);
 
     imshow("Frame", contour);
     if (waitKey(30) >= 0)
