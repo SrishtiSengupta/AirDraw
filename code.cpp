@@ -320,17 +320,28 @@ int process_video() {
     Mat element = (Mat_<uchar>(3, 3) << 0, 1, 0, 1, 1, 1, 0, 1, 0);
     morphologyEx(fg_binarized_mask, fg_binarized_mask, MORPH_OPEN, element);
 
-    imshow("mask", fg_binarized_mask);
-
+    imshow("Binarized Mask", fg_binarized_mask);
 
     Mat bg_removed;
     orig.copyTo(bg_removed,fg_binarized_mask);
+
+
+    facedetect(bg_removed);
     imshow("BG Removed", bg_removed);
 
+    //Convert bg_removed to channel 1 using pre_processing()
+    //Detect Face here and remove it, input would be result of the above step
+    //only hand is left
     //finally contour
+
+
+
+
+
+
     Mat contour = contouring(fg_binarized_mask, bg_removed);
 
-    imshow("Frame", contour);
+    imshow("Output", contour);
     if (waitKey(30) >= 0)
       break;
   }
